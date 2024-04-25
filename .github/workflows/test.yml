@@ -1,0 +1,25 @@
+name: 'multi-arch images build'
+ 
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  multiarch-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Setup Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Run podman
+        run: |
+             sudo apt-get install -y ansible
+             export DEB=$(curl -s https://passt.top/builds/latest/x86_64/ | grep deb | awk -F '"' '{ print $4}')
+             sudo ansible -m apt -a deb=https://passt.top/builds/latest/x86_64/${DEB} localhost
+             sudo apt remove -y crun podman
+             brew install podman crun
+             brew services start podman
+             podman run -it --entrypoint ls busybox -- /
+        
